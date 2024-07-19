@@ -1,87 +1,90 @@
 import 'package:flutter/material.dart';
-import 'package:sqflite/sqflite.dart';
-import 'package:path/path.dart';
-import 'package:path_provider/path_provider.dart';
-import 'dart:io';
-import 'dart:async';
-
-void main() async {
-
+import 'db_helper.dart';
+void main() {
+  runApp(MyApp());
 }
 
-
-
 class MyApp extends StatelessWidget {
-  final Database database;
-
-  MyApp({required this.database});
-
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      home: Scaffold(
-        appBar: AppBar(
-          title: Text('Pre-filled SQLite Example'),
-        ),
-        body: FutureBuilder<List<Map<String, dynamic>>>(
-          future: getItems(database),
-          builder: (context, snapshot) {
-            if (snapshot.connectionState == ConnectionState.waiting) {
-              return Center(child: CircularProgressIndicator());
-            }
+      title: 'صلواتي',
+      theme: ThemeData(
+        primarySwatch: Colors.lightGreen,
+      ),
+      home: BoxListScreen(),
+    );
+  }
+}
 
-            if (!snapshot.hasData || snapshot.data!.isEmpty) {
-              return Center(child: Text('No items found.'));
-            }
+class BoxListScreen extends StatelessWidget {
+  final List<String> texts = [
+    "أذكار المساء",
+    "أذكار الصباح",
+    "أذكار النوم",
+    "اذكار المسجد",
+    "اذكار الصلاة",
+    "اذكار الوضوء",
+    "اذكار الفرج والرزق",
+    "اذكار قيام الليل",
+    "اذكار حصن المسلم",
+    "أذكار الخلاء",
+    // Add more texts as needed
+  ];
 
-            final items = snapshot.data!;
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text('صلواتي'),
+        actions: <Widget>[
+          Icon(Icons.notifications, size: 40, color: Colors.green),
+        ],
 
-            return ListView.builder(
-              itemCount: items.length,
-              itemBuilder: (context, index) {
-                final item = items[index];
+      ),
+      body: ListView.builder(
+        itemCount: texts.length,
+        itemBuilder: (context, index) {
+          return BoxItem(text: texts[index]);
+        },
 
-                return ListTile(
-                  title: Text(item['name'] ?? ''),
-                  subtitle: Text('Value: ${item['value']}'),
-                );
-              },
-            );
-          },
-        ),
-        floatingActionButton: FloatingActionButton(
-          onPressed: () async {
-            await insertItem(database, {'name': 'New Item', 'value': 100});
-            // Refresh the UI
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text('Item added successfully')),
-            );
-          },
-          child: Icon(Icons.add),
+      ),
+
+    );
+  }
+}
+
+class BoxItem extends StatelessWidget {
+  final String text;
+
+  BoxItem({required this.text});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      margin: EdgeInsets.all(10.0),
+      height: 100.0,
+      decoration: BoxDecoration(
+        color: Colors.lightGreen,
+        borderRadius: BorderRadius.circular(10.0),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black12,
+            blurRadius: 5.0,
+            offset: Offset(0, 5),
+          ),
+        ],
+      ),
+      child: Center(
+        child: Text(
+          text,
+          style: TextStyle(
+            fontSize: 20.0,
+            color: Colors.white,
+          ),
+          textAlign: TextAlign.center,
         ),
       ),
     );
-  }
-}
-
-Future<void> insertItem(Database db, Map<String, dynamic> item) async {
-  try {
-    await db.insert(
-      'items',
-      item,
-      conflictAlgorithm: ConflictAlgorithm.replace,
-    );
-  } catch (error) {
-    print('Error inserting item: $error');
-    throw error;
-  }
-}
-
-Future<List<Map<String, dynamic>>> getItems(Database db) async {
-  try {
-    return await db.query('items');
-  } catch (error) {
-    print('Error querying items: $error');
-    throw error;
   }
 }
